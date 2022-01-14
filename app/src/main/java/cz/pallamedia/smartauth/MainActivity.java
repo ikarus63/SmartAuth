@@ -10,12 +10,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import java.io.IOException;
 import java.util.Random;
 import okhttp3.OkHttpClient;
@@ -28,26 +30,26 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_READ_SMS = 101;
     private static Activity activity;
 
-    private final String SMS_API_URL = "https://pallamedia.cz/smsapi.php";
+    private final String SMS_API_URL = "https://pallamedia.cz/smsapi.php?auth";
     private OkHttpClient client = new OkHttpClient();
 
     private static EditText field;
-    private Button button;
+    private static Button button;
+    private static TextView textView;
 
     private String phoneNumber;
-    private String authCode;
+    private static String authCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(ContextCompat.checkSelfPermission(activity,
-                Manifest.permission.READ_SMS)
-                !=PackageManager.PERMISSION_GRANTED){
+        Context mContext = this;
 
-            ActivityCompat.requestPermissions(activity,
-                    new String[]{Manifest.permission.READ_SMS},
+        if(ContextCompat.checkSelfPermission((Activity)mContext,Manifest.permission.READ_SMS)!=PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.READ_CALENDAR},
                     MY_PERMISSIONS_REQUEST_READ_SMS);
         }
 
@@ -55,15 +57,32 @@ public class MainActivity extends AppCompatActivity {
 
         field = (EditText) findViewById(R.id.field);
         button = (Button) findViewById(R.id.button);
+        textView = (TextView) findViewById(R.id.textView);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                setControlsVisible(false);
+                changeText("Odesílám SMS s vygenerovaným kódem...");
                 savePhoneNumber();
                 generateAuthCode();
                 sendSMS();
             }
         });
+    }
+
+    private static void changeText(String txt){
+        textView.setText(txt);
+    }
+
+    private static void setControlsVisible(boolean a){
+        if(a){
+            button.setVisibility(View.VISIBLE);
+            //field.setVisibility(View.VISIBLE);
+        }else{
+            button.setVisibility(View.INVISIBLE);
+            //field.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void savePhoneNumber() {
@@ -76,25 +95,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void generateAuthCode() {
         Random random = new Random();
-        authCode = String.valueOf(random.nextInt());
+        authCode = String.valueOf(random.nextInt() + Integer.MAX_VALUE);
     }
 
     private void sendSMS() {
-        Request request = new Request.Builder()
-                .url(SMS_API_URL + "?phone=" + phoneNumber)
-                .build();
-
-        try {
-            Response response = client.newCall(request).execute();
-            String answer = response.body().string();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        new SMSHttpRequest().execute();
     }
 
-    private static void fillInAuthCode(String messageBody) {
-        field.setText(messageBody);
+    class SMSHttpRequest extends AsyncTask<String, Void, String> {
+
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+
+            Request request = new Request.Builder()
+                    .url(SMS_API_URL + "&phone=" + phoneNumber + "&code=" + authCode)
+                    .build();
+
+            try {
+                Response response = client.newCall(request).execute();
+                return response.body().string();
+            } catch (IOException e) {
+                return e.toString();
+            }
+
+        }
+
+        protected void onPostExecute(String result) {
+            changeText("Čekám na SMS...");
+        }
+    }
+
+        private static void fillInAuthCode(String messageBody) {
+            setControlsVisible(true);
+            if(messageBody.trim().equalsIgnoreCase(authCode)){
+                changeText("Autorizační kód úspěšně ověřen!");
+            }else{
+                changeText("Chybný autorizační kód!");
+            }
+            field.setText(messageBody);
     }
 
     public static class SMSListener extends BroadcastReceiver {
@@ -113,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
                             message[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
                             from = message[i].getOriginatingAddress();
                             String messageBody = message[i].getMessageBody();
+
                             fillInAuthCode(messageBody);
                         }
                     } catch (Exception e) {
