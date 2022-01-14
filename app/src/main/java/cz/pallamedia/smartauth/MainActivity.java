@@ -64,16 +64,17 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 savePhoneNumber();
                 setButtonVisible(false);
-                changeText("Odesílám SMS s vygenerovaným kódem...");
+                changeText("Odesílám SMS s vygenerovaným kódem...", true);
                 generateAuthCode();
                 sendSMS();
             }
         });
     }
 
-    private static void changeText(String txt){
+    private static void changeText(String txt, boolean empty){
         textView.setText(txt);
-        field.setText("");
+        if(empty)
+            field.setText("");
     }
 
     private static void setButtonText(String txt){
@@ -134,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(String result) {
-            changeText("Zadejte kód z SMS:");
+            changeText("Zadejte kód z SMS:", true);
             setButtonVisible(true);
             setButtonText("Potvrdit");
             setButtonListener();
@@ -157,11 +158,11 @@ public class MainActivity extends AppCompatActivity {
 
     public static void checkAuthCode(){
         if(field.getText().toString().trim().equalsIgnoreCase(authCode)){
-            changeText("Autorizační kód úspěšně ověřen!");
+            changeText("Autorizační kód úspěšně ověřen!", false);
             setButtonVisible(false);
             setFieldActivated(false);
         }else{
-            changeText("Chybný autorizační kód!");
+            changeText("Chybný autorizační kód!", false);
         }
     }
 
