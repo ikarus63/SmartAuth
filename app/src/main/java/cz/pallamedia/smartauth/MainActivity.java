@@ -62,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setControlsVisible(false);
-                changeText("Odesílám SMS s vygenerovaným kódem...");
                 savePhoneNumber();
+                setButtonVisible(false);
+                changeText("Odesílám SMS s vygenerovaným kódem...");
                 generateAuthCode();
                 sendSMS();
             }
@@ -73,15 +73,26 @@ public class MainActivity extends AppCompatActivity {
 
     private static void changeText(String txt){
         textView.setText(txt);
+        field.setText("");
     }
 
-    private static void setControlsVisible(boolean a){
+    private static void setButtonText(String txt){
+        button.setText(txt);
+    }
+
+    private static void setButtonVisible(boolean a){
         if(a){
             button.setVisibility(View.VISIBLE);
-            //field.setVisibility(View.VISIBLE);
         }else{
             button.setVisibility(View.INVISIBLE);
-            //field.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private static void setFieldVisible(boolean a){
+        if(a){
+            field.setVisibility(View.VISIBLE);
+        }else{
+            field.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -95,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void generateAuthCode() {
         Random random = new Random();
-        authCode = String.valueOf(random.nextInt() + Integer.MAX_VALUE);
+        authCode = String.valueOf(random.nextInt() + Integer.MAX_VALUE).replace("-", "");
     }
 
     private void sendSMS() {
@@ -127,18 +138,35 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(String result) {
-            changeText("Čekám na SMS...");
+            changeText("Zadejte kód z SMS:");
+            setButtonVisible(true);
+            setButtonText("Potvrdit");
+            setButtonListener();
         }
     }
 
-        private static void fillInAuthCode(String messageBody) {
-            setControlsVisible(true);
-            if(messageBody.trim().equalsIgnoreCase(authCode)){
-                changeText("Autorizační kód úspěšně ověřen!");
-            }else{
-                changeText("Chybný autorizační kód!");
+    private void setButtonListener() {
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkAuthCode();
             }
+        });
+    }
+
+    private static void fillInAuthCode(String messageBody) {
             field.setText(messageBody);
+            //checkAuthCode();
+    }
+
+    public static void checkAuthCode(){
+        if(field.getText().toString().trim().equalsIgnoreCase(authCode)){
+            changeText("Autorizační kód úspěšně ověřen!");
+            setButtonVisible(false);
+            setFieldVisible(false);
+        }else{
+            changeText("Chybný autorizační kód!");
+        }
     }
 
     public static class SMSListener extends BroadcastReceiver {
