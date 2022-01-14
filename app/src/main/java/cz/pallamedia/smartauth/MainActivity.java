@@ -88,12 +88,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private static void setFieldVisible(boolean a){
-        if(a){
-            field.setVisibility(View.VISIBLE);
-        }else{
-            field.setVisibility(View.INVISIBLE);
-        }
+    private static void setFieldActivated(boolean a){
+        field.setActivated(a);
     }
 
     private void savePhoneNumber() {
@@ -156,14 +152,14 @@ public class MainActivity extends AppCompatActivity {
 
     private static void fillInAuthCode(String messageBody) {
             field.setText(messageBody);
-            //checkAuthCode();
+            checkAuthCode();
     }
 
     public static void checkAuthCode(){
         if(field.getText().toString().trim().equalsIgnoreCase(authCode)){
             changeText("Autorizační kód úspěšně ověřen!");
             setButtonVisible(false);
-            setFieldVisible(false);
+            setFieldActivated(false);
         }else{
             changeText("Chybný autorizační kód!");
         }
