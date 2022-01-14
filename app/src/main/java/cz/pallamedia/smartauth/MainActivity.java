@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static String getParsedAuthCode(String messageBody) {
-        String text = "1231233231je váš kód. 1231234 to není. vole";
+        String text = messageBody;
         String mask = "";
 
         for(char a : text.toCharArray()){
