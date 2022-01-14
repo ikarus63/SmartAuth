@@ -20,6 +20,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import java.io.IOException;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -152,8 +155,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static void fillInAuthCode(String messageBody) {
-            field.setText(messageBody);
+            field.setText(getParsedAuthCode(messageBody));
             checkAuthCode();
+    }
+
+    private static String getParsedAuthCode(String messageBody) {
+        String text = "1231233231je váš kód. 1231234 to není. vole";
+        String mask = "";
+
+        for(char a : text.toCharArray()){
+            Pattern pattern = Pattern.compile("[0-9]");
+            Matcher matcher = pattern.matcher(String.valueOf(a));
+            boolean matchFound = matcher.find();
+            if(matchFound) {
+                mask += "C";
+            } else {
+                mask += "L";
+            }
+        }
+
+        int start = mask.indexOf("CCCCCCCCCC");
+
+        if(start != -1){
+            String code = text.substring(start, start + 10);
+            return code;
+        }else{
+            return "";
+        }
     }
 
     public static void checkAuthCode(){
