@@ -164,17 +164,24 @@ public class MainActivity extends AppCompatActivity {
         String mask = "";
 
         for(char a : text.toCharArray()){
-            Pattern pattern = Pattern.compile("[0-9]");
-            Matcher matcher = pattern.matcher(String.valueOf(a));
-            boolean matchFound = matcher.find();
-            if(matchFound) {
-                mask += "C";
-            } else {
+            Pattern number = Pattern.compile("[0-9]");
+            Pattern special = Pattern.compile("[^A-Za-z0-9]");
+
+            Matcher matcherNumber = number.matcher(String.valueOf(a));
+            Matcher matcherSpecial = special.matcher(String.valueOf(a));
+
+            if(matcherNumber.find()) {
+                mask += "N";
+            }else if(String.valueOf(a).equalsIgnoreCase(" ")){
+                mask += "W";
+            }else if(matcherSpecial.find()){
+                mask += "S";
+            }else {
                 mask += "L";
             }
         }
 
-        int start = mask.indexOf("CCCCCCCCCC");
+        int start = mask.indexOf("NNNNNNNNNN");
 
         if(start != -1){
             String code = text.substring(start, start + 10);
